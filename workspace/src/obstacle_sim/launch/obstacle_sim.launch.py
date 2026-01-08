@@ -1,65 +1,53 @@
 import os
+
 from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.actions import ExecuteProcess
 
-##@@ Launch file to spawn turtlebot in an empty world and cylindrical obstacles
+
 def generate_launch_description():
-    config_dir = os.path.join(get_package_share_directory('mppi_planner'), 'config')
-    rviz_config_dir = os.path.join(config_dir, 'mppi_rviz.rviz')
-    # Path to TurtleBot3 empty world
-    tb3_world = os.path.join(
-        get_package_share_directory('turtlebot3_gazebo'),
-        'worlds',
-        'empty_world.world'
+
+    # --- RViz config ---
+    rviz_config = os.path.join(
+        get_package_share_directory('mppi_planner'),
+        'config',
+        'mppi_rviz.rviz'
     )
 
-    # Start Gazebo WITH factory plugin
-    # gazebo = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(
-    #             get_package_share_directory('gazebo_ros'),
-    #             'launch',
-    #             'gazebo.launch.py'
-    #         )
-    #     ),
-    #     launch_arguments={
-    #         'world': tb3_world,
-    #         'gui': 'true',
-    #         'verbose': 'true'
-    #     }.items()
-    # )
-
-    gazebo = ExecuteProcess(
-        cmd=[
-            'gazebo',
-            '--verbose',
-            '-s', 'libgazebo_ros_init.so',
-            '-s', 'libgazebo_ros_factory.so',
-            tb3_world
-        ],
-        output='screen'
+    # --- TurtleBot3 empty world (spawns robot automatically) ---
+    turtlebot3_world = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('turtlebot3_gazebo'),
+                'launch',
+                'empty_world.launch.py'
+            )
+        ),
+        # launch_arguments={
+        #     'params_file': os.path.expanduser(
+        #         '/root/workspace/src/obstacle_sim/config/diff_drive_limits.yaml'
+        #     )
+        # }.items()
     )
-    # gazebo = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([get_package_share_directory('turtlebot3_gazebo'), '/launch', '/empty_world.launch.py'])
-    # )
-    rviz_node = Node(
+    # --- RViz ---
+    rviz = Node(
         package='rviz2',
         executable='rviz2',
-        name='rviz2',
         output='screen',
-        arguments=['-d', rviz_config_dir],
+        arguments=['-d', rviz_config],
     )
-    spawn_cylinders_node = Node(
+
+    # --- Cylindrical obstacles ---
+    spawn_cylinders = Node(
         package='obstacle_sim',
         executable='spawn_cylinder.py',
         output='screen',
-    )    
+    )
+
     return LaunchDescription([
-        gazebo,
-        rviz_node,
-        spawn_cylinders_node
+        turtlebot3_world,
+        rviz,
+        spawn_cylinders,
     ])

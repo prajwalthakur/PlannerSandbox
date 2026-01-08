@@ -89,7 +89,6 @@ install(
 ament_python_install_package(${PROJECT_NAME})
 
 install(PROGRAMS
-  obstacle_sim/obstacle_sim.py
   obstacle_sim/spawn_cylinder.py
   DESTINATION lib/${PROJECT_NAME}
 )

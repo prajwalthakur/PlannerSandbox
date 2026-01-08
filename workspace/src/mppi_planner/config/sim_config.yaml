@@ -1,27 +1,31 @@
 # config.yaml
 # @@ use jax.generator for reproducibility
+
 seed: 223 #113   use: 223, 7 obs in b/w , 1 : free
+dt: 0.15  
+dim_control: 2  
+time_horizon: 5.0
+euclid_goal_tol: 0.2       # [m]
+orient_goal_tol: 0.1       # [rad]
+mppi_num_rollouts: 600
 obs_r: 0.1            
-obs_buffer: 0.06       # extra clearance around obstacles
+obs_buffer: 0.02       # extra clearance around obstacles
 obs_h: 0.2
-goal_tolerance: 0.1   # teminate if the robot is within this distance to goal
-horizon_length: 12
-mppi_num_rollouts: 200
 pose_lim:               # [xmin,ymin],[xmax,ymax]
   - [-4, -4]
   - [4,  4]
 boundary_eps: 1e-3
-obs_cmd_noise_std_dev:  0.025
+obs_cmd_noise_std_dev:  0.001
 goal_rand_change: 80
 obs_sim_dt: 0.025
 obs_v_min: -0.3
 obs_v_max: 0.3
 obs_goal_threshold: 0.08
-time_horizon: 10
+obs_time_horizon: 10
 time_horizon_obst: 5
 max_neighbours: 9
 neighbor_dist: 2
-num_obs: 10          # number of obstacles
+num_obs: 10         # number of obstacles
 obs_array:
   - [2.0,  0.0]
   - [-2.0, 0.0]
@@ -36,31 +40,145 @@ obs_array:
   # - [-2.0,1.0]
   # - [-2.0,-1.0]
 
-#mppi params
-goal: [+1,3,0.0]
-dt:   0.1               # 1/planning-rate
-robot_r: 0.23            # robot radius [m]
-dim_st: 3               # state dimension
-dim_ctrl: 2             # control dimension
-dim_euclid: 2
+obstacle:
+  obstacle_radius: 0.1
+  num_obs: 10
+# =========================================================
+# MPPI Core Parameters
+# =========================================================
 
-noise_std_dev: 0.05 # per‐step noise standard deviation
+mppi:
+  is_close_loop: true
+  do_timeshift: true
+  iteration_count: 1
 
-horizon_length: 10      # planning horizon
-mppi_num_rollouts: 100  # number of sampled rollouts
+  time_horizon: 5.0          # [s] planning horizon
+  dt: 0.15                   # [s] model timestep
+  horizon_length: 20
 
-knot_scale: 2       # down‐sampling factor for control knots
-degree: 3           # spline degree for control interpolation
+  num_rollouts: 600
+  noise_std_dev: 0.05
 
-beta: 7             # MPPI temperature
-beta_u_bound: 10    # upper bound on β 
-beta_l_bound: 5     # lower bound on β
-param_exploration: 0.2
-update_beta: true   # whether to adapt β online
+  # State / control dimensions
+  dim_state: 3               # (x, y, yaw)
+  dim_control: 2             # (v, omega)
+  dim_euclid: 2              # (x, y)
 
-sampling_type: gaussian_halton
-collision_cost_weight: 50 # cost for collision
-stage_goal_cost_weight: 5  # stage cost for the goal
-stage_goal_cost_weight_orient: 1e-2  # stage cost for the orientation
-terminal_goal_cost_weight: 10 #terminal cost for the goal
-terminal_goal_cost_weight_orient: 1e-2 #terminal cost for the orientation 
+  # Goal tolerances
+  euclid_goal_tol: 0.2       # [m]
+  orient_goal_tol: 0.1       # [rad]
+
+  # Robot geometry
+  robot_radius: 0.07         # [m]
+  control_limit:               # [xmin,ymin],[xmax,ymax]
+    - [-0.3, +0.3]
+    - [-1.5,  1.5]
+  min_acceleration:
+    linear: -2.5
+    angular: -3.2
+  max_acceleration:
+    linear: 2.5
+    angular: 3.2
+  add_emergency_maneuver: true
+
+# =========================================================
+# Sampling / Optimization
+# =========================================================
+
+sampling:
+  type: "jax_gaussian" #gaussian_halton
+  knot_scale: 2
+  spline_degree: 3
+  
+  
+  update_temperature: false
+  temperature: 5
+  temperature_bounds:
+    lower: 0.1
+    upper: 1.5
+
+  param_exploration: 0.2
+
+
+  add_gamma_cost: true
+  gamma_weight: 0.015
+
+# =========================================================
+# Smoothing
+# =========================================================
+smoother:
+  window_size: 31
+  poly_order: 3
+# =========================================================
+# Obstacle / Risk Modeling
+# =========================================================
+
+risk:
+  num_monte_carlo_samples: 200
+  obs_unimodel_std_dev: 0.03
+  obs_weights:
+    soft: 1.0
+    hard: 50.0
+  sigma_threshold: 0.03
+
+# =========================================================
+# Critics Configuration
+# =========================================================
+
+critics:
+
+  GoalCritic:
+    enabled: true
+    cost_power: 1
+    cost_weight: 8.0
+    threshold_to_consider: 0.2
+
+  GoalAngleCritic:
+    enabled: true
+    cost_power: 1
+    cost_weight: 5.0
+    threshold_to_consider: 0.5
+    
+  ObstaclesCritic:
+    enabled: true
+    cost_power: 1
+    repulsion_weight: 3.5
+    critical_weight: 20.0
+    collision_cost: 10000.0
+    collision_margin_distance: 0.1
+    near_goal_distance: 0.5   
+    obstacles_radius: 0.1 
+    robot_radius: 0.2
+    buffer_radius: 0.01
+    consider_obs_density: true
+
+  PreferForwardCritic:
+    enabled: true
+    cost_power: 1
+    cost_weight: 5.0
+    threshold_to_consider: 0.1
+
+  PathAngleCritic:
+    enabled: true
+    cost_power: 1
+    cost_weight: 10.0
+    offset_from_furthest: 0.5
+    threshold_to_consider: 0.5
+    max_angle_to_furthest: 0.785398
+    mode: 0
+
+  TerminalCostCritic:
+    enabled: true
+    terminal_weight: 10.0
+    goal_cost_weight: 1.0
+    goal_angle_cost_weight: 0.01
+
+
+
+
+
+
+
+
+
+

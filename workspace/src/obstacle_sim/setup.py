@@ -21,8 +21,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'spawn_cylinder =  obstacle_sim.spawn_cylinder:main',
-            'obstacle_sim = obstacle_sim.obstacle_sim:main'
+            'spawn_cylinder =  obstacle_sim.spawn_cylinder:main'
         ],
     },
 )

@@ -22,8 +22,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'mppi_planner_node = mppi_planner.mppi_planner_node:main',
-            'spawn_cylinder =  mppi_planner.spawn_cylinder:main'
+            'vanilla_mppi_planner_node = mppi_planner.vanilla_mppi.vanilla_mppi_planner_node:main',
+            'dyn_risk_mppi_planner_node = mppi_planner.dyn_risk_mppi.dyn_risk_mppi_node:main'
         ],
     },
 )

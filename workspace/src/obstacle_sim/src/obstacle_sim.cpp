@@ -55,7 +55,7 @@ public:
     
     for (int i = 0; i < num_obs_; ++i)
     {
-      std::string name = "cylinder_" + std::to_string(i);
+      std::string name = "obstacle_" + std::to_string(i);
 
       cmd_vel_pubs_[name] =
         create_publisher<geometry_msgs::msg::Twist>(
@@ -166,7 +166,7 @@ private:
     obs_v_max_ = cfg["obs_v_max"].as<double>();
     num_obs_ = cfg["num_obs"].as<int>();
     goalThreshold = cfg["obs_goal_threshold"].as<double>();
-    timeHorizon = cfg["time_horizon"].as<double>();
+    timeHorizon = cfg["obs_time_horizon"].as<double>();
     timeHorizonObst = cfg["time_horizon_obst"].as<double>();
     maxNeighbors = cfg["max_neighbours"].as<double>();
     neighborDist = cfg["neighbor_dist"].as<double>();
