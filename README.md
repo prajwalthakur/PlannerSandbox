@@ -1,4 +1,4 @@
-# Nova Planner
+# PlannerSandbox
 
 Nova Planner is a ROS 2–based motion planning repository providing clean, example-driven implementations of sampling-based planning methods. It includes MPPI variants implemented in Python and JAX for fast prototyping and GPU-accelerated rollouts, alongside ongoing C++ implementations for real-time robotic systems. The repository also covers spline-based trajectory planning and multi-agent scenarios, with support for static, dynamic, and stochastic obstacles, and integrates with ROS 2 and Gazebo for simulation and visualization.
 
