@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="${MODEL_NAME}">
+    <static>false</static>
+
+    <link name="${MODEL_NAME}_link">
+      <gravity>false</gravity>
+
+      <inertial>
+        <mass>5.0</mass>
+        <inertia>
+          <ixx>0.083</ixx>
+          <iyy>0.083</iyy>
+          <izz>0.083</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>${RADIUS}</radius>
+            <length>${HEIGHT}</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="visual">
+        <geometry>
+          <cylinder>
+            <radius>${RADIUS}</radius>
+            <length>${HEIGHT}</length>
+          </cylinder>
+        </geometry>
+        <material>
+            <ambient>${COLOR}</ambient>
+            <diffuse>${COLOR}</diffuse>
+            <specular>0.1 0.1 0.1 1.0</specular>
+        </material>
+      </visual>
+    </link>
+
+    <plugin name="planar_move" filename="libgazebo_ros_planar_move.so">
+      <ros>
+        <namespace>/${MODEL_NAME}</namespace>
+      </ros>
+      <bodyName>${MODEL_NAME}_link</bodyName>
+      <update_rate>50.0</update_rate>
+
+      <odometryFrame>${MODEL_NAME}/odom</odometryFrame>
+      <robot_base_frame>${MODEL_NAME}_link</robot_base_frame>
+
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+    </plugin>
+
+  </model>
+</sdf>
